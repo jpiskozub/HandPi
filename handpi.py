@@ -88,6 +88,7 @@ while True:
     mode = input("Select operation mode: \n D - Debug Mode \t E - Examination Mode")
 
     if mode == 'D' or 'd':
+        self_diag(24000)
         try:
             while True:
                 readADC()
