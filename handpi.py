@@ -63,6 +63,26 @@ def readADC_voltage():
     ADC_voltage_vect.append(P5_2.voltage) 
     return ADC_voltage_vect
 
+def self_diag(shortcircuit_threshold):
+    ADC_diag_buff=[]
+    for i in range (10):
+        ADC_diag_buff.append(readADC())
+    diag_avr=np.array(ADC_diag_buff)
+    diag_mean = [diag_avr.mean(axis=0),
+                 diag_avr.mean(axis=1), 
+                 diag_avr.mean(axis=2), 
+                 diag_avr.mean(axis=3), 
+                 diag_avr.mean(axis=4), 
+                 diag_avr.mean(axis=5), 
+                 diag_avr.mean(axis=6), 
+                 diag_avr.mean(axis=7), 
+                 diag_avr.mean(axis=8), 
+                 diag_avr.mean(axis=9), 
+                 diag_avr.mean(axis=10)]
+    for i in diag_mean:
+        if diag_mean[i]>=shortcircuit_threshold:
+            print("Shortcircuit on channel:", i)
+
 while True:
     print ("HandPi ver:", version)
     mode = input("Select operation mode: \n D - Debug Mode \t E - Examination Mode")
