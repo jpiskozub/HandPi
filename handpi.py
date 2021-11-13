@@ -10,28 +10,30 @@ import numpy as np
 
 version = "0.0.1"
 
-address2 = 0x49
-address3 = 0x48
-address0 = 0x4A
-address1 = 0x4B
-
-ads0 = ADS.ADS1115(i2c, address = address0, data_rate = 860)
-ads1 = ADS.ADS1115(i2c, address = address1, data_rate = 860)
-ads2 = ADS.ADS1115(i2c, address = address2, data_rate = 860)
-ads3 = ADS.ADS1115(i2c, address = address3, data_rate = 860)
+ads0 = ADS.ADS1115(i2c, address=0x48, data_rate=860, gain=2/3)  # U4
+ads1 = ADS.ADS1115(i2c, address=0x49, data_rate=860, gain=2/3)  # U3
+ads2 = ADS.ADS1115(i2c, address=0x4a, data_rate=860, gain=2/3)  # U1
+ads3 = ADS.ADS1115(i2c, address=0x4b, data_rate=860, gain=2/3)  # U2
 
 #ads0.mode = Mode.CONTINUOUS
 
-P1_1 = AnalogIn(ads0, ADS.P0)
-P1_2 = AnalogIn(ads0, ADS.P1)
-P2_1 = AnalogIn(ads0, ADS.P2)
-P2_2 = AnalogIn(ads0, ADS.P3)
-P3_1 = AnalogIn(ads1, ADS.P0)
-P3_2 = AnalogIn(ads1, ADS.P1)
-P4_1 = AnalogIn(ads1, ADS.P2)
-P4_2 = AnalogIn(ads1, ADS.P3)
-P5_1 = AnalogIn(ads2, ADS.P0)
-P5_2 = AnalogIn(ads2, ADS.P1)
+P1_1 = AnalogIn(ads1, ADS.P3) # P1_1 PIN:12
+P1_2 = AnalogIn(ads1, ADS.P0) # P1_2 PIN:10
+P2_1 = AnalogIn(ads3, ADS.P3) # P2_1 PIN:6
+P2_2 = AnalogIn(ads3, ADS.P0) # P2_2 PIN:8
+P3_1 = AnalogIn(ads2, ADS.P3) # P3_1 PIN:2
+P3_2 = AnalogIn(ads2, ADS.P0) # P3_2 PIN:4
+P4_1 = AnalogIn(ads2, ADS.P1) # P4_1 PIN:1
+P4_2 = AnalogIn(ads2, ADS.P2) # P4_2 PIN:3
+P5_1 = AnalogIn(ads3, ADS.P1) # P5_1 PIN:5
+P5_2 = AnalogIn(ads3, ADS.P2) # P5_2 PIN:7
+
+Spare0 = AnalogIn(ads0, ADS.P0)
+Spare1 = AnalogIn(ads0, ADS.P1)
+Spare2 = AnalogIn(ads0, ADS.P2)
+Spare3 = AnalogIn(ads0, ADS.P3)
+Spare5 = AnalogIn(ads1, ADS.P1)
+Spare6 = AnalogIn(ads1, ADS.P2)
 
 def readADC():
     ADC_vect = []
