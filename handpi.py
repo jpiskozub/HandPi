@@ -49,6 +49,20 @@ def readADC():
     ADC_vect.append(P5_2.value) 
     return ADC_vect
 
+def readADC_voltage():
+    ADC_voltage_vect = []
+    ADC_voltage_vect.append(P1_1.voltage)
+    ADC_voltage_vect.append(P1_2.voltage)
+    ADC_voltage_vect.append(P2_1.voltage)
+    ADC_voltage_vect.append(P2_2.voltage)
+    ADC_voltage_vect.append(P3_1.voltage)
+    ADC_voltage_vect.append(P3_2.voltage)
+    ADC_voltage_vect.append(P4_1.voltage) 
+    ADC_voltage_vect.append(P4_2.voltage) 
+    ADC_voltage_vect.append(P5_1.voltage) 
+    ADC_voltage_vect.append(P5_2.voltage) 
+    return ADC_voltage_vect
+
 while True:
     print ("HandPi ver:", version)
     mode = input("Select operation mode: \n D - Debug Mode \t E - Examination Mode")
