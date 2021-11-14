@@ -8,6 +8,9 @@ import numpy as np
 from adafruit_ads1x15.ads1x15 import Mode
 from adafruit_ads1x15.analog_in import AnalogIn
 
+import csv
+from time import gmtime, strftime
+
 version = "main"
 
 
@@ -34,6 +37,8 @@ Spare2 = AnalogIn(ads4, ADS.P1)
 Spare3 = AnalogIn(ads4, ADS.P0)
 Spare5 = AnalogIn(ads4, ADS.P2)
 Spare6 = AnalogIn(ads4, ADS.P3)
+
+channels=[P1_1, P1_2, P2_1, P2_2, P3_1, P3_2, P4_1, P4_2, P5_1, P5_2]
 
 def readADC():
     ADC_vect = []
@@ -72,6 +77,10 @@ def self_diag(shortcircuit_threshold):
 
     result = np.where(diag_vect.mean(axis=0) >= shortcircuit_threshold)
     print('Shortcircuits on channels: ', result[0], sep='\n')
+    sc_channels=result[0]
+    for x in sc_channels:
+        print(channels[x])
+    return sc_channels
 
 while True:
     print ("HandPi ver:", version)
@@ -88,15 +97,30 @@ while True:
             print('Interrupted!')
 
     if mode == 'E'  or 'e':
-        try:
-            sign_type = input("Select examined sign type: \n S - Static Signs \t D - Dynamic Signs")
-            if sign_type == 'S' or 's':
-                    while True:
-                        sign = input("Select sign to be performed: \t")
-                        for i in range(10):
-                            print (readADC())
-        except KeyboardInterrupt:
-            print('Interrupted!')
+        with open("/home/pi/"+strftime("%Y-%m-%d %H:%M:%S", gmtime())+".csv", mode='w') as file:
+            writer = csv.writer(file,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
+            writer.writerow([])
+            try:
+                sign_type = input("Select examined sign type: \n S - Static Signs \t D - Dynamic Signs")
+                if sign_type == 'S' or 's':
+                        while True:
+                            sign = input("Select sign to be performed: \t")
+                            for i in range(10):
+                                print (readADC())
+                                writer.writerow([strftime("%H:%M:%S", gmtime()),sign, P1_1.value, P1_2.value, P2_1.value, P2_2.value, P3_1.value, P3_2.value, P4_1.value, P4_2.value, P5_1.value, P5_2.value])
+                if sign_type == 'D' or 'd':
+                        while True:
+                            sign = input("Select sign to be performed: \t")
+                            readings_temp=[]
+                            for i in range(1000):
+                                readings_temp.append(readADC())
+                            readings_temp = np.array(readings_temp)
+                            np.savetxt(file, readings_temp, delimiter=',')
+                                
+
+                                #writer.writerow([strftime("%H:%M:%S", gmtime()),sign, P1_1.value, P1_2.value, P2_1.value, P2_2.value, P3_1.value, P3_2.value, P4_1.value, P4_2.value, P5_1.value, P5_2.value])
+            except KeyboardInterrupt:
+                print('Interrupted!')
 
  
        
