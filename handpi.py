@@ -75,25 +75,26 @@ def self_diag(shortcircuit_threshold):
 
 while True:
     print ("HandPi ver:", version)
-    mode = input("Select operation mode: /n D - Debug Mode /t E - Examination Mode")
+    
+    self_diag(25000)
+    
+    mode = input("Select operation mode: \n D - Debug Mode \t E - Examination Mode")
 
     if mode == 'D' or 'd':
         try:
             while True:
-                readADC()
-                print (ADC_vect)
+                print (readADC())
         except KeyboardInterrupt:
             print('Interrupted!')
 
     if mode == 'E'  or 'e':
         try:
-            sign_type = input("Select examined sign type: /n S - Static Signs /t D - Dynamic Signs")
+            sign_type = input("Select examined sign type: \n S - Static Signs \t D - Dynamic Signs")
             if sign_type == 'S' or 's':
                     while True:
-                        sign = input("Select sign to be performed: /t")
+                        sign = input("Select sign to be performed: \t")
                         for i in range(10):
-                            readADC()
-                            print (ADC_vect)
+                            print (readADC())
         except KeyboardInterrupt:
             print('Interrupted!')
 
