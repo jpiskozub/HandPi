@@ -1,13 +1,12 @@
 import board
 import busio
+
 i2c = busio.I2C(board.SCL, board.SDA)
 
 import adafruit_ads1x15.ads1115 as ADS
+import numpy as np
 from adafruit_ads1x15.ads1x15 import Mode
 from adafruit_ads1x15.analog_in import AnalogIn
-
-
-import numpy as np
 
 version = "main"
 
@@ -65,24 +64,14 @@ def readADC_voltage():
     return ADC_voltage_vect
 
 def self_diag(shortcircuit_threshold):
+    
     ADC_diag_buff=[]
     for i in range (10):
         ADC_diag_buff.append(readADC())
-    diag_avr=np.array(ADC_diag_buff)
-    diag_mean = [diag_avr.mean(axis=0),
-                 diag_avr.mean(axis=1), 
-                 diag_avr.mean(axis=2), 
-                 diag_avr.mean(axis=3), 
-                 diag_avr.mean(axis=4), 
-                 diag_avr.mean(axis=5), 
-                 diag_avr.mean(axis=6), 
-                 diag_avr.mean(axis=7), 
-                 diag_avr.mean(axis=8), 
-                 diag_avr.mean(axis=9), 
-                 diag_avr.mean(axis=10)]
-    for i in diag_mean:
-        if diag_mean[i]>=shortcircuit_threshold:
-            print("Shortcircuit on channel:", i)
+        diag_vect=np.array(ADC_diag_buff)
+
+    result = np.where(diag_vect.mean(axis=0) >= shortcircuit_threshold)
+    print('Shortcircuits on channels: ', result[0], sep='\n')
 
 while True:
     print ("HandPi ver:", version)
