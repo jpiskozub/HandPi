@@ -39,6 +39,43 @@ Spare5 = AnalogIn(ads4, ADS.P2)
 Spare6 = AnalogIn(ads4, ADS.P3)
 
 channels=[P1_1, P1_2, P2_1, P2_2, P3_1, P3_2, P4_1, P4_2, P5_1, P5_2]
+sign_types = ['static', 'dynamic']
+sign_types_dict = {'a': sign_types[0],
+                   'ą': sign_types[1],
+                   'b': sign_types[0],
+                   'c': sign_types[0],
+                   'ć': sign_types[1],
+                   'ch': sign_types[1],
+                   'cz': sign_types[1],
+                   'd': sign_types[1],
+                   'e': sign_types[0],
+                   'ę': sign_types[1],
+                   'f': sign_types[1],
+                   'g': sign_types[1],
+                   'h': sign_types[1],
+                   'i': sign_types[0],
+                   'j': sign_types[1],
+                   'k': sign_types[1],
+                   'l': sign_types[0],
+                   'ł': sign_types[1],
+                   'm': sign_types[0],
+                   'n': sign_types[0],
+                   'ń': sign_types[1],
+                   'o': sign_types[0],
+                   'ó': sign_types[1],
+                   'p': sign_types[0],
+                   'r': sign_types[0],
+                   'rz': sign_types[1],
+                   's': sign_types[0],
+                   'ś': sign_types[1],
+                   'sz': sign_types[1],
+                   't': sign_types[0],
+                   'u': sign_types[0],
+                   'w': sign_types[0],
+                   'y': sign_types[0],
+                   'z': sign_types[1],
+                   'ź': sign_types[1],
+                   'ż': sign_types[1]}
 
 def readADC():
     ADC_vect = []
@@ -115,7 +152,11 @@ while True:
                             for i in range(1000):
                                 readings_temp.append(readADC())
                             readings_temp = np.array(readings_temp)
-                            np.savetxt(file, readings_temp, delimiter=',')
+                            signarr = np.array([sign for i in range(1000)],dtype='str')
+                            typearr = np.array([sign_type for i in range(1000)],dtype='str')
+                            result = np.c[np.array(readings_temp),signarr,typearr]
+
+                            np.savetxt(file, result, delimiter=',')
                                 
 
                                 #writer.writerow([strftime("%H:%M:%S", gmtime()),sign, P1_1.value, P1_2.value, P2_1.value, P2_2.value, P3_1.value, P3_2.value, P4_1.value, P4_2.value, P5_1.value, P5_2.value])
