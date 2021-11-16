@@ -9,8 +9,14 @@ from adafruit_ads1x15.ads1x15 import Mode
 from adafruit_ads1x15.analog_in import AnalogIn
 
 import csv
-from time import gmtime, strftime
+import time 
 
+from imusensor.MPU9250 import MPU9250
+import smbus
+
+address = 0x68
+bus = smbus.SMBus(1)
+imu = MPU9250.MPU9250(bus, address)
 version = "main"
 
 
