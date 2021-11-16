@@ -17,6 +17,10 @@ import smbus
 address = 0x68
 bus = smbus.SMBus(1)
 imu = MPU9250.MPU9250(bus, address)
+
+
+
+
 version = "main"
 
 
@@ -45,6 +49,7 @@ Spare5 = AnalogIn(ads4, ADS.P2)
 Spare6 = AnalogIn(ads4, ADS.P3)
 
 channels=[P1_1, P1_2, P2_1, P2_2, P3_1, P3_2, P4_1, P4_2, P5_1, P5_2]
+
 sign_types = ['static', 'dynamic']
 sign_types_dict = {'a': sign_types[0],
                    'ą': sign_types[1],
@@ -82,6 +87,7 @@ sign_types_dict = {'a': sign_types[0],
                    'z': sign_types[1],
                    'ź': sign_types[1],
                    'ż': sign_types[1]}
+
 
 def readADC():
     ADC_vect = []
@@ -124,48 +130,63 @@ def self_diag(shortcircuit_threshold):
     for x in sc_channels:
         print(channels[x])
     return sc_channels
+    
+imu.begin()
+
+
 
 while True:
     print ("HandPi ver:", version)
     
     self_diag(25000)
+    loop_time = 10
+    fmt = "%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%5.6s","%5.6s","%5.6s","%s","%s",
+    
     
     mode = input("Select operation mode: \n D - Debug Mode \t E - Examination Mode")
+    
+    imu.loadCalibDataFromFile("/home/pi/calib_real4.json")
 
-    if mode == 'D' or 'd':
+    if (mode == 1):
         try:
             while True:
-                print (readADC())
+                imu.readSensor()
+                imu.computeOrientation()
+
+                print (readADC(),imu.roll, imu.pitch, imu.yaw)
         except KeyboardInterrupt:
             print('Interrupted!')
 
-    if mode == 'E'  or 'e':
-        with open("/home/pi/"+strftime("%Y-%m-%d %H:%M:%S", gmtime())+".csv", mode='w') as file:
+    else:
+        with open("/home/pi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
             writer = csv.writer(file,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
             writer.writerow([])
+            
             try:
                 sign_type = input("Select examined sign type: \n S - Static Signs \t D - Dynamic Signs")
-                if sign_type == 'S' or 's':
+                if sign_type == 1:
                         while True:
                             sign = input("Select sign to be performed: \t")
                             for i in range(10):
                                 print (readADC())
-                                writer.writerow([strftime("%H:%M:%S", gmtime()),sign, P1_1.value, P1_2.value, P2_1.value, P2_2.value, P3_1.value, P3_2.value, P4_1.value, P4_2.value, P5_1.value, P5_2.value])
-                if sign_type == 'D' or 'd':
+                                writer.writerow([time.strftime("%H:%M:%S", time.gmtime()),sign, P1_1.value, P1_2.value, P2_1.value, P2_2.value, P3_1.value, P3_2.value, P4_1.value, P4_2.value, P5_1.value, P5_2.value])
+                else:
                         while True:
                             sign = input("Select sign to be performed: \t")
-                            readings_temp=[]
-                            for i in range(1000):
-                                readings_temp.append(readADC())
-                            readings_temp = np.array(readings_temp)
-                            signarr = np.array([sign for i in range(1000)],dtype='str')
-                            typearr = np.array([sign_type for i in range(1000)],dtype='str')
-                            result = np.c[np.array(readings_temp),signarr,typearr]
-
-                            np.savetxt(file, result, delimiter=',')
+                            ADC_readings_temp=[]
+                            IMU_readings_temp=[]
+                            for i in range(loop_time):
+                                ADC_readings_temp.append(readADC())
+                                imu.readSensor()
+                                imu.computeOrientation()
+                                IMU_readings_temp.append([imu.pitch, imu.roll,imu.yaw])
+                            signarr = np.array([sign for i in range(loop_time)],dtype='str')
+                            typearr = np.array([sign_type for i in range(loop_time)],dtype='str')
+                            result = np.c_[np.concatenate((ADC_readings_temp, IMU_readings_temp),axis=1), signarr.T, typearr.T]
+                            np.savetxt(file, result, delimiter=',', fmt= fmt)
                                 
 
-                                #writer.writerow([strftime("%H:%M:%S", gmtime()),sign, P1_1.value, P1_2.value, P2_1.value, P2_2.value, P3_1.value, P3_2.value, P4_1.value, P4_2.value, P5_1.value, P5_2.value])
+                            #writer.writerow([strftime("%H:%M:%S", gmtime()),sign, P1_1.value, P1_2.value, P2_1.value, P2_2.value, P3_1.value, P3_2.value, P4_1.value, P4_2.value, P5_1.value, P5_2.value])
             except KeyboardInterrupt:
                 print('Interrupted!')
 
