@@ -4,19 +4,14 @@ import busio
 i2c = busio.I2C(board.SCL, board.SDA)
 
 import adafruit_ads1x15.ads1115 as ADS
+import adafruit_bno055
+
 import numpy as np
 from adafruit_ads1x15.ads1x15 import Mode
 from adafruit_ads1x15.analog_in import AnalogIn
 
 import csv
 import time 
-
-from imusensor.MPU9250 import MPU9250
-import smbus
-
-address = 0x68
-bus = smbus.SMBus(1)
-imu = MPU9250.MPU9250(bus, address)
 
 
 
@@ -28,6 +23,8 @@ ads1 = ADS.ADS1115(i2c, address=0x4a, data_rate=860, gain=2/3)  # U1
 ads2 = ADS.ADS1115(i2c, address=0x4b, data_rate=860, gain=2/3)  # U2
 ads3 = ADS.ADS1115(i2c, address=0x49, data_rate=860, gain=2/3)  # U3
 ads4= ADS.ADS1115(i2c, address=0x48, data_rate=860, gain=2/3)  # U4
+
+sensor = adafruit_bno055.BNO055_I2C(i2c) #IMU
 
 
 P1_1 = AnalogIn(ads3, ADS.P3) # P1_1 PIN:12
@@ -131,7 +128,7 @@ def self_diag(shortcircuit_threshold):
         print(channels[x])
     return sc_channels
     
-imu.begin()
+
 
 
 
@@ -140,20 +137,17 @@ while True:
     
     self_diag(25000)
     loop_time = 10
-    fmt = "%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%5.6s","%5.6s","%5.6s","%s","%s",
+    fmt = "%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%5.6s","%5.6s","%5.6s","%5.6s","%5.6s","%5.6s","%s","%s" #TODO fixing floats digits
     
     
-    mode = input("Select operation mode: \n D - Debug Mode \t E - Examination Mode")
+    mode = input("Select operation mode: \n 1 - Debug Mode \t 2 - Examination Mode")
     
-    imu.loadCalibDataFromFile("/home/pi/calib_real4.json")
+    
 
     if (mode == 1):
         try:
             while True:
-                imu.readSensor()
-                imu.computeOrientation()
-
-                print (readADC(),imu.roll, imu.pitch, imu.yaw)
+                print (readADC(),sensor.acceleration, sensor.magnetic, sensor.gyro,sensor.euler,sensor.linear_acceleration)
         except KeyboardInterrupt:
             print('Interrupted!')
 
@@ -174,15 +168,16 @@ while True:
                         while True:
                             sign = input("Select sign to be performed: \t")
                             ADC_readings_temp=[]
-                            IMU_readings_temp=[]
+                            position_readings_temp=[]
+                            movement_readings_temp=[]
                             for i in range(loop_time):
                                 ADC_readings_temp.append(readADC())
-                                imu.readSensor()
-                                imu.computeOrientation()
-                                IMU_readings_temp.append([imu.pitch, imu.roll,imu.yaw])
+                                position_readings_temp.append(sensor.euler)
+                                movement_readings_temp.append(sensor.linear_acceleration)
                             signarr = np.array([sign for i in range(loop_time)],dtype='str')
                             typearr = np.array([sign_type for i in range(loop_time)],dtype='str')
-                            result = np.c_[np.concatenate((ADC_readings_temp, IMU_readings_temp),axis=1), signarr.T, typearr.T]
+                            result = np.c_[np.concatenate((ADC_readings_temp, position_readings_temp, movement_readings_temp),axis=1), signarr.T, typearr.T]
+                            print(result)
                             np.savetxt(file, result, delimiter=',', fmt= fmt)
                                 
 
