@@ -11,7 +11,9 @@ from adafruit_ads1x15.ads1x15 import Mode
 from adafruit_ads1x15.analog_in import AnalogIn
 
 import csv
-import time 
+import time
+from tqdm import trange
+
 
 
 
@@ -24,7 +26,10 @@ ads2 = ADS.ADS1115(i2c, address=0x4b, data_rate=860, gain=2/3)  # U2
 ads3 = ADS.ADS1115(i2c, address=0x49, data_rate=860, gain=2/3)  # U3
 ads4= ADS.ADS1115(i2c, address=0x48, data_rate=860, gain=2/3)  # U4
 
+remap_P6= (0x00,0x01,0x02,0x00,0x01,0x01)
+
 sensor = adafruit_bno055.BNO055_I2C(i2c) #IMU
+#sensor.axis_remap()
 
 
 P1_1 = AnalogIn(ads3, ADS.P3) # P1_1 PIN:12
@@ -45,7 +50,9 @@ Spare3 = AnalogIn(ads4, ADS.P0)
 Spare5 = AnalogIn(ads4, ADS.P2)
 Spare6 = AnalogIn(ads4, ADS.P3)
 
-channels=[P1_1, P1_2, P2_1, P2_2, P3_1, P3_2, P4_1, P4_2, P5_1, P5_2]
+ADC_channels=['P1_1', 'P1_2', 'P2_1', 'P2_2', 'P3_1', 'P3_2', 'P4_1', 'P4_2', 'P5_1', 'P5_2']
+IMU_channels = ['Euler_x', 'Euler_y', 'Euler_z', 'Acc_x', 'Acc_y', 'Acc_z']
+fmt = "%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.7s","%5.7s","%5.7s","%5.7s","%5.7s","%5.7s","%s","%s"
 
 sign_types = ['static', 'dynamic']
 sign_types_dict = {'a': sign_types[0],
@@ -122,10 +129,10 @@ def self_diag(shortcircuit_threshold):
         diag_vect=np.array(ADC_diag_buff)
 
     result = np.where(diag_vect.mean(axis=0) >= shortcircuit_threshold)
-    print('Shortcircuits on channels: ', result[0], sep='\n')
+    print('Shortcircuits on ADC_: ', result[0], sep='\n')
     sc_channels=result[0]
     for x in sc_channels:
-        print(channels[x])
+        print(ADC_channels[x])
     return sc_channels
     
 
@@ -135,16 +142,16 @@ def self_diag(shortcircuit_threshold):
 while True:
     print ("HandPi ver:", version)
     
-    self_diag(25000)
-    loop_time = 10
-    fmt = "%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%.5s","%5.6s","%5.6s","%5.6s","%5.6s","%5.6s","%5.6s","%s","%s" #TODO fixing floats digits
+    self_diag(21000)
+    loop_time = 100
+    
     
     
     mode = input("Select operation mode: \n 1 - Debug Mode \t 2 - Examination Mode")
     
     
 
-    if (mode == 1):
+    if mode == 1:
         try:
             while True:
                 print (readADC(),sensor.acceleration, sensor.magnetic, sensor.gyro,sensor.euler,sensor.linear_acceleration)
@@ -154,34 +161,30 @@ while True:
     else:
         with open("/home/pi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
             writer = csv.writer(file,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
-            writer.writerow([])
+            writer.writerow([ADC_channels, IMU_channels])
             
             try:
-                sign_type = input("Select examined sign type: \n S - Static Signs \t D - Dynamic Signs")
-                if sign_type == 1:
-                        while True:
-                            sign = input("Select sign to be performed: \t")
-                            for i in range(10):
-                                print (readADC())
-                                writer.writerow([time.strftime("%H:%M:%S", time.gmtime()),sign, P1_1.value, P1_2.value, P2_1.value, P2_2.value, P3_1.value, P3_2.value, P4_1.value, P4_2.value, P5_1.value, P5_2.value])
-                else:
-                        while True:
-                            sign = input("Select sign to be performed: \t")
-                            ADC_readings_temp=[]
-                            position_readings_temp=[]
-                            movement_readings_temp=[]
-                            for i in range(loop_time):
-                                ADC_readings_temp.append(readADC())
-                                position_readings_temp.append(sensor.euler)
-                                movement_readings_temp.append(sensor.linear_acceleration)
-                            signarr = np.array([sign for i in range(loop_time)],dtype='str')
-                            typearr = np.array([sign_type for i in range(loop_time)],dtype='str')
-                            result = np.c_[np.concatenate((ADC_readings_temp, position_readings_temp, movement_readings_temp),axis=1), signarr.T, typearr.T]
-                            print(result)
-                            np.savetxt(file, result, delimiter=',', fmt= fmt)
-                                
-
-                            #writer.writerow([strftime("%H:%M:%S", gmtime()),sign, P1_1.value, P1_2.value, P2_1.value, P2_2.value, P3_1.value, P3_2.value, P4_1.value, P4_2.value, P5_1.value, P5_2.value])
+                while True:
+                    sign = input("Select sign to be performed: \t")
+                    ADC_readings_temp=[]
+                    position_readings_temp=[]
+                    movement_readings_temp=[]
+                    try:
+                        if sign in sign_types_dict:
+                            sign_type = sign_types_dict[sign]
+                    except:
+                        print('{0} is not in dictionary.'.format(sign))
+                    for i in trange(loop_time):
+                        ADC_readings_temp.append(readADC())
+                        position_readings_temp.append(sensor.euler)
+                        movement_readings_temp.append(sensor.linear_acceleration)
+                    signarr = np.array([sign for i in range(loop_time)],dtype='str')
+                    typearr = np.array([sign_type for i in range(loop_time)],dtype='str')
+                    result = np.concatenate((ADC_readings_temp, position_readings_temp, movement_readings_temp),axis=1)
+                    result = np.append(result,np.column_stack((signarr, typearr)),axis = 1)
+                    print(result)
+                    self_diag(21000)
+                    np.savetxt(file, result, delimiter=',', fmt= fmt)
             except KeyboardInterrupt:
                 print('Interrupted!')
 
