@@ -14,6 +14,8 @@ import csv
 import time
 from tqdm import trange
 
+import json
+
 
 
 
@@ -29,7 +31,12 @@ ads4= ADS.ADS1115(i2c, address=0x48, data_rate=860, gain=2/3)  # U4
 remap_P6= (0x00,0x01,0x02,0x00,0x01,0x01)
 
 sensor = adafruit_bno055.BNO055_I2C(i2c) #IMU
-#sensor.axis_remap()
+#BNO_AXIS_REMAP = { 'x': BNO055.AXIS_REMAP_X,
+#                   'y': BNO055.AXIS_REMAP_Z,
+#                   'z': BNO055.AXIS_REMAP_Y,
+#                   'x_sign': BNO055.AXIS_REMAP_POSITIVE,
+#                   'y_sign': BNO055.AXIS_REMAP_POSITIVE,
+#                   'z_sign': BNO055.AXIS_REMAP_NEGATIVE }
 
 
 P1_1 = AnalogIn(ads3, ADS.P3) # P1_1 PIN:12
@@ -54,6 +61,9 @@ ADC_channels=['P1_1', 'P1_2', 'P2_1', 'P2_2', 'P3_1', 'P3_2', 'P4_1', 'P4_2', 'P
 IMU_channels = ['Euler_x', 'Euler_y', 'Euler_z', 'Acc_x', 'Acc_y', 'Acc_z']
 fmt = "%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.7s","%5.7s","%5.7s","%5.7s","%5.7s","%5.7s","%s","%s"
 
+with open(sign_memory.json) as json_data:
+     sign_memory=json_data.read()
+     
 sign_types = ['static', 'dynamic']
 sign_types_dict = {'a': sign_types[0],
                    'ą': sign_types[1],
@@ -180,6 +190,7 @@ while True:
                         movement_readings_temp.append(sensor.linear_acceleration)
                     signarr = np.array([sign for i in range(loop_time)],dtype='str')
                     typearr = np.array([sign_type for i in range(loop_time)],dtype='str')
+                    
                     result = np.concatenate((ADC_readings_temp, position_readings_temp, movement_readings_temp),axis=1)
                     result = np.append(result,np.column_stack((signarr, typearr)),axis = 1)
                     print(result)
