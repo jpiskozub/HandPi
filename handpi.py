@@ -1,5 +1,12 @@
 import board
 import busio
+import paho.mqtt.client as mqtt
+
+mqttc=mqtt.Client(client_id='handpi')
+
+broker= '192.168.0.102'
+port=1883
+topic='handpi'
 
 i2c = busio.I2C(board.SCL, board.SDA)
 
@@ -12,10 +19,6 @@ from adafruit_ads1x15.analog_in import AnalogIn
 
 import csv
 import time
-from tqdm import trange
-
-import json
-
 
 
 
@@ -61,8 +64,7 @@ ADC_channels=['P1_1', 'P1_2', 'P2_1', 'P2_2', 'P3_1', 'P3_2', 'P4_1', 'P4_2', 'P
 IMU_channels = ['Euler_x', 'Euler_y', 'Euler_z', 'Acc_x', 'Acc_y', 'Acc_z']
 fmt = "%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.7s","%5.7s","%5.7s","%5.7s","%5.7s","%5.7s","%s","%s"
 
-with open(sign_memory.json) as json_data:
-     sign_memory=json_data.read()
+
      
 sign_types = ['static', 'dynamic']
 sign_types_dict = {'a': sign_types[0],
@@ -164,7 +166,8 @@ while True:
     if mode == 1:
         try:
             while True:
-                print (readADC(),sensor.acceleration, sensor.magnetic, sensor.gyro,sensor.euler,sensor.linear_acceleration)
+                print (msg=(readADC(),sensor.acceleration, sensor.magnetic, sensor.gyro,sensor.euler,sensor.linear_acceleration))
+                mqttc.publish(topic,msg)
         except KeyboardInterrupt:
             print('Interrupted!')
 
