@@ -17,6 +17,8 @@ import numpy as np
 from adafruit_ads1x15.ads1x15 import Mode
 from adafruit_ads1x15.analog_in import AnalogIn
 
+from tqdm import trange
+
 import csv
 import time
 
@@ -172,7 +174,7 @@ while True:
             print('Interrupted!')
 
     else:
-        with open("/home/pi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
+        with open("/home/handpi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
             writer = csv.writer(file,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
             writer.writerow([ADC_channels, IMU_channels])
             
