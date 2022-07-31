@@ -1,5 +1,12 @@
 import board
 import busio
+import paho.mqtt.client as mqtt
+
+mqttc=mqtt.Client(client_id='handpi')
+
+broker= '192.168.0.102'
+port=1883
+topic='handpi'
 
 i2c = busio.I2C(board.SCL, board.SDA)
 
@@ -10,12 +17,10 @@ import numpy as np
 from adafruit_ads1x15.ads1x15 import Mode
 from adafruit_ads1x15.analog_in import AnalogIn
 
-import csv
-import time
 from tqdm import trange
 
-import json
-
+import csv
+import time
 
 
 
@@ -26,7 +31,7 @@ version = "main"
 ads1 = ADS.ADS1115(i2c, address=0x4a, data_rate=860, gain=2/3)  # U1
 ads2 = ADS.ADS1115(i2c, address=0x4b, data_rate=860, gain=2/3)  # U2
 ads3 = ADS.ADS1115(i2c, address=0x49, data_rate=860, gain=2/3)  # U3
-ads4= ADS.ADS1115(i2c, address=0x48, data_rate=860, gain=2/3)  # U4
+ads4= ADS.ADS1115(i2c, address=0x48, data_rate=860, gain=2/3)  # U41
 
 remap_P6= (0x00,0x01,0x02,0x00,0x01,0x01)
 
@@ -61,8 +66,7 @@ ADC_channels=['P1_1', 'P1_2', 'P2_1', 'P2_2', 'P3_1', 'P3_2', 'P4_1', 'P4_2', 'P
 IMU_channels = ['Euler_x', 'Euler_y', 'Euler_z', 'Acc_x', 'Acc_y', 'Acc_z']
 fmt = "%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.5s","%5.7s","%5.7s","%5.7s","%5.7s","%5.7s","%5.7s","%s","%s"
 
-with open(sign_memory.json) as json_data:
-     sign_memory=json_data.read()
+
      
 sign_types = ['static', 'dynamic']
 sign_types_dict = {'a': sign_types[0],
@@ -150,26 +154,28 @@ def self_diag(shortcircuit_threshold):
 
 
 while True:
-    print ("HandPi ver:", version)
+    #print ("HandPi ver:", version)
     
     self_diag(21000)
     loop_time = 100
     
-    
+    mqttc.connect(broker,port)
     
     mode = input("Select operation mode: \n 1 - Debug Mode \t 2 - Examination Mode")
     
     
 
-    if mode == 1:
+    if mode == '1':
         try:
             while True:
-                print (readADC(),sensor.acceleration, sensor.magnetic, sensor.gyro,sensor.euler,sensor.linear_acceleration)
+                msg = (readADC(),sensor.acceleration, sensor.magnetic, sensor.gyro,sensor.euler,sensor.linear_acceleration)
+                print (msg)
+                mqttc.publish(topic,str(msg))
         except KeyboardInterrupt:
             print('Interrupted!')
 
     else:
-        with open("/home/pi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
+        with open("/home/handpi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
             writer = csv.writer(file,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
             writer.writerow([ADC_channels, IMU_channels])
             
