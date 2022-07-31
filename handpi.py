@@ -29,7 +29,7 @@ version = "main"
 ads1 = ADS.ADS1115(i2c, address=0x4a, data_rate=860, gain=2/3)  # U1
 ads2 = ADS.ADS1115(i2c, address=0x4b, data_rate=860, gain=2/3)  # U2
 ads3 = ADS.ADS1115(i2c, address=0x49, data_rate=860, gain=2/3)  # U3
-ads4= ADS.ADS1115(i2c, address=0x48, data_rate=860, gain=2/3)  # U4
+ads4= ADS.ADS1115(i2c, address=0x48, data_rate=860, gain=2/3)  # U41
 
 remap_P6= (0x00,0x01,0x02,0x00,0x01,0x01)
 
