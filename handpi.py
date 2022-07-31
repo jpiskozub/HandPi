@@ -27,7 +27,6 @@ import numpy as np
 
 
 
-version = "main"
 
 
 ads1 = ADS.ADS1115(i2c, address=0x4a, data_rate=860, gain=2/3)  # U1
@@ -156,13 +155,13 @@ def self_diag(shortcircuit_threshold):
 
 
 while True:
-    print ("HandPi ver:", version)
+    #print ("HandPi ver:", version)
     
     self_diag(21000)
     loop_time = 100
     
     mqttc.connect(broker,port)
-    psqlconn = psql.connect(dbname = 'handpi', user = 'handpi', password = 'handpi', host = '192.168.0.102')
+    psqlconn = psql.connect(dbname = 'handpi', user = 'handpi', password = 'raspberryhandpi', host = '192.168.0.102')
     psqlcur = psqlconn.cursor()
     
     mode = input("Select operation mode: \n 1 - Debug Mode \t 2 - Examination Mode")
