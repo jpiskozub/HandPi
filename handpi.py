@@ -154,22 +154,23 @@ def self_diag(shortcircuit_threshold):
 
 
 while True:
-    print ("HandPi ver:", version)
+    #print ("HandPi ver:", version)
     
     self_diag(21000)
     loop_time = 100
     
-    
+    mqttc.connect(broker,port)
     
     mode = input("Select operation mode: \n 1 - Debug Mode \t 2 - Examination Mode")
     
     
 
-    if mode == 1:
+    if mode == '1':
         try:
             while True:
-                print (msg=(readADC(),sensor.acceleration, sensor.magnetic, sensor.gyro,sensor.euler,sensor.linear_acceleration))
-                mqttc.publish(topic,msg)
+                msg = (readADC(),sensor.acceleration, sensor.magnetic, sensor.gyro,sensor.euler,sensor.linear_acceleration)
+                print (msg)
+                mqttc.publish(topic,str(msg))
         except KeyboardInterrupt:
             print('Interrupted!')
 
