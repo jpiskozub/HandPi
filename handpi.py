@@ -5,7 +5,7 @@ import paho.mqtt.client as mqtt
 
 mqttc=mqtt.Client(client_id='handpi')
 
-broker= '192.168.0.102'
+broker= '192.168.0.101'
 port=1883
 topic='handpi'
 
@@ -150,6 +150,13 @@ def self_diag(shortcircuit_threshold):
         print(ADC_channels[x])
     return sc_channels
     
+def exam_data():
+
+    gender = input ("State a gender of a subject \n [M/F]")
+    age = input ("State an age of a subject:")
+    palm = input ("State a palm size ofa subject:")
+    mscd = input ("Does subjcet has any muscosceletal disorders? \n [Y/N]")
+    return gender, age, palm, mscd
 
 
 
@@ -161,7 +168,7 @@ while True:
     loop_time = 100
     
     mqttc.connect(broker,port)
-    psqlconn = psql.connect(dbname = 'handpi', user = 'handpi', password = 'raspberryhandpi', host = '192.168.0.102')
+    psqlconn = psql.connect(dbname = 'handpi', user = 'handpi', password = 'raspberryhandpi', host = broker)
     psqlcur = psqlconn.cursor()
     
     mode = input("Select operation mode: \n 1 - Debug Mode \t 2 - Examination Mode")
@@ -178,35 +185,57 @@ while True:
             print('Interrupted!')
 
     else:
-        with open("/home/handpi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
-            writer = csv.writer(file,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
-            writer.writerow([ADC_channels, IMU_channels])
-            
-            try:
-                while True:
-                    sign = input("Select sign to be performed: \t")
-                    ADC_readings_temp=[]
-                    position_readings_temp=[]
-                    movement_readings_temp=[]
-                    try:
-                        if sign in sign_types_dict:
-                            sign_type = sign_types_dict[sign]
-                    except:
-                        print('{0} is not in dictionary.'.format(sign))
-                    for i in trange(loop_time):
-                        ADC_readings_temp.append(readADC())
-                        position_readings_temp.append(sensor.euler)
-                        movement_readings_temp.append(sensor.linear_acceleration)
-                    signarr = np.array([sign for i in range(loop_time)],dtype='str')
-                    typearr = np.array([sign_type for i in range(loop_time)],dtype='str')
-                    
-                    result = np.concatenate((ADC_readings_temp, position_readings_temp, movement_readings_temp),axis=1)
-                    result = np.append(result,np.column_stack((signarr, typearr)),axis = 1)
-                    print(result)
-                    self_diag(21000)
-                    np.savetxt(file, result, delimiter=',', fmt= fmt)
-            except KeyboardInterrupt:
-                print('Interrupted!')
+     # with open("/home/handpi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
+     #     writer = csv.writer(file,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
+     #     writer.writerow([ADC_channels, IMU_channels])
+     #     
+     #     try:
+     #         while True:
+     #             sign = input("Select sign to be performed: \t")
+     #             ADC_readings_temp=[]
+     #             position_readings_temp=[]
+     #             movement_readings_temp=[]
+     #             try:
+     #                 if sign in sign_types_dict:
+     #                     sign_type = sign_types_dict[sign]
+     #             except:
+     #                 print('{0} is not in dictionary.'.format(sign))
+     #             for i in trange(loop_time):
+     #                 ADC_readings_temp.append(readADC())
+     #                 position_readings_temp.append(sensor.euler)
+     #                 movement_readings_temp.append(sensor.linear_acceleration)
+     #             signarr = np.array([sign for i in range(loop_time)],dtype='str')
+     #             typearr = np.array([sign_type for i in range(loop_time)],dtype='str')
+     #             
+     #             result = np.concatenate((ADC_readings_temp, position_readings_temp, movement_readings_temp),axis=1)
+     #             result = np.append(result,np.column_stack((signarr, typearr)),axis = 1)
+     #             print(result)
+     #             self_diag(21000)
+     #             np.savetxt(file, result, delimiter=',', fmt= fmt)
+     #             if sign_types_dict[sign] == 'static':
+     #                 cur.exequte(""" INSERT INTO static_gestures () VALUES (); """, (result))
+        try:
+            psqlcur.execute("SELECT LAST_VALUE(exam_id) OVER(ORDER BY exam_id) FROM examination;")
+            last_id=psqlcur.fetchone()
+            while True:
+                sign = input("Select sign to be performed: \t")
+                ADC_readings_temp=[]
+                position_readings_temp=[]
+                movement_readings_temp=[]
+                try:
+                    if sign in sign_types_dict:
+                        sign_type = sign_types_dict[sign]
+                except:
+                    print('{0} is not in dictionary.'.format(sign)) 
+               # if sign_types_dict[sign] == 'static':
+               #     for i in trange(loop_time):
+               #         psqlcur.execute(""" INSERT INTO static_gestures () VALUES (); """, (result))        
+                self_diag(21000)
+           
+           
+
+        except KeyboardInterrupt:
+            print('Interrupted!')
 
  
        
