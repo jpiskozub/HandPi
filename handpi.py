@@ -217,6 +217,8 @@ while True:
         try:
             psqlcur.execute("SELECT LAST_VALUE(exam_id) OVER(ORDER BY exam_id) FROM examination;")
             last_id=psqlcur.fetchone()
+            initals = input ('Please provide subject initials:')
+            psqlcur.execute("INSERT INTO examination (patient_initials) VALUES ('{0}');".format(initals))
             while True:
                 sign = input("Select sign to be performed: \t")
                 ADC_readings_temp=[]
@@ -235,6 +237,9 @@ while True:
            
 
         except KeyboardInterrupt:
+            psqlconn.commit()
+            psqlcur.close()
+            psqlconn.close()
             print('Interrupted!')
 
  
