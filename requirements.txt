@@ -1,0 +1,5 @@
+adafruit-circuitpython-ads1x15
+adafruit-circuitpython-bno055
+paho-mqtt
+numpy
+tqdm
