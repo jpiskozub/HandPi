@@ -8,24 +8,33 @@ broker= '192.168.0.102'
 port=1883
 topic='handpi'
 
+import paho.mqtt.client as mqtt
+
+mqttc=mqtt.Client(client_id='handpi')
+
+broker= '192.168.0.101'
+port=1883
+topic='handpi'
+
 i2c = busio.I2C(board.SCL, board.SDA)
 
 import adafruit_ads1x15.ads1115 as ADS
-import adafruit_bno055
-
-import numpy as np
 from adafruit_ads1x15.ads1x15 import Mode
 from adafruit_ads1x15.analog_in import AnalogIn
 
+
+import adafruit_bno055
+
 from tqdm import trange
 
-import csv
-import time
+import psycopg2 as psql
+
+
+import pandas as pd
+import numpy as np
 
 
 
-
-version = "main"
 
 
 ads1 = ADS.ADS1115(i2c, address=0x4a, data_rate=860, gain=2/3)  # U1
@@ -149,6 +158,13 @@ def self_diag(shortcircuit_threshold):
         print(ADC_channels[x])
     return sc_channels
     
+def exam_data():
+
+    gender = input ("State a gender of a subject \n [M/F]")
+    age = input ("State an age of a subject:")
+    palm = input ("State a palm size ofa subject:")
+    mscd = input ("Does subjcet has any muscosceletal disorders? \n [Y/N]")
+    return gender, age, palm, mscd
 
 
 
@@ -160,6 +176,10 @@ while True:
     loop_time = 100
     
     mqttc.connect(broker,port)
+
+    psqlconn = psql.connect(dbname = 'handpi', user = 'handpi', password = 'raspberryhandpi', host = broker)
+    psqlcur = psqlconn.cursor()
+
     
     mode = input("Select operation mode: \n 1 - Debug Mode \t 2 - Examination Mode")
     
@@ -175,35 +195,50 @@ while True:
             print('Interrupted!')
 
     else:
-        with open("/home/handpi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
-            writer = csv.writer(file,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
-            writer.writerow([ADC_channels, IMU_channels])
+
+        try:
+
             
-            try:
-                while True:
-                    sign = input("Select sign to be performed: \t")
-                    ADC_readings_temp=[]
-                    position_readings_temp=[]
-                    movement_readings_temp=[]
-                    try:
-                        if sign in sign_types_dict:
-                            sign_type = sign_types_dict[sign]
-                    except:
-                        print('{0} is not in dictionary.'.format(sign))
+            initals = input ('Please provide subject initials:')
+            psqlcur.execute("INSERT INTO examination (patient_initials) VALUES ('{0}');".format(initals))
+            psqlcur.execute("SELECT LAST_VALUE(exam_id) OVER(ORDER BY exam_id) FROM examination;")
+            last_id=psqlcur.fetchone()
+            (gender, age, palm, mscd) = exam_data()
+            psqlcur.execute("INSERT INTO patient_data (exam_id, gender, age, mcsd, palm_size) VALUES ({0}, '{1}', {2}, '{3}', {4});".format(last_id[0], gender, age, mscd, palm ))
+            
+            while True:
+                sign = input("Select sign to be performed: \t")
+                ADC_readings_temp=[]
+                position_readings_temp=[]
+                movement_readings_temp=[]
+                try:
+                    if sign in sign_types_dict:
+                        sign_type = sign_types_dict[sign]
+                except:
+                    print('{0} is not in dictionary.'.format(sign)) 
+                if sign_types_dict[sign] == 'static':
                     for i in trange(loop_time):
-                        ADC_readings_temp.append(readADC())
-                        position_readings_temp.append(sensor.euler)
-                        movement_readings_temp.append(sensor.linear_acceleration)
-                    signarr = np.array([sign for i in range(loop_time)],dtype='str')
-                    typearr = np.array([sign_type for i in range(loop_time)],dtype='str')
-                    
-                    result = np.concatenate((ADC_readings_temp, position_readings_temp, movement_readings_temp),axis=1)
-                    result = np.append(result,np.column_stack((signarr, typearr)),axis = 1)
-                    print(result)
+                        ADC_readings_temp = readADC()
+                        position_readings_temp = sensor.euler
+                        movement_readings_temp = sensor.linear_acceleration
+                        psqlcur.execute(" INSERT INTO static_gestures (exam_id, gesture_timestamp, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture) VALUES ({0}, '{1}', {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, {17}, '{18}'); ".format(last_id[0], pd.Timestamp.now(),  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign ))        
                     self_diag(21000)
-                    np.savetxt(file, result, delimiter=',', fmt= fmt)
-            except KeyboardInterrupt:
-                print('Interrupted!')
+                    psqlconn.commit()
+                else:
+                    for i in trange(loop_time):
+                        ADC_readings_temp = readADC()
+                        position_readings_temp = sensor.euler
+                        movement_readings_temp = sensor.linear_acceleration
+                        psqlcur.execute(" INSERT INTO dynamic_gestures (exam_id, gesture_timestamp, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, '{17}'); ".format(last_id[0], pd.Timestamp.now(),  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign ))        
+                    self_diag(21000)
+                    psqlconn.commit()
+           
+
+        except KeyboardInterrupt:
+            psqlconn.commit()
+            psqlcur.close()
+            psqlconn.close()
+            print('Interrupted!')
 
  
        
