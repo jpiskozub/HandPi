@@ -3,3 +3,4 @@ adafruit-circuitpython-bno055
 paho-mqtt
 numpy
 tqdm
+pandas
