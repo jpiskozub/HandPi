@@ -201,7 +201,7 @@ while True:
             
             initals = input ('Please provide subject initials:')
             psqlcur.execute("INSERT INTO examination (patient_initials) VALUES ('{0}');".format(initals))
-            psqlcur.execute("SELECT LAST_VALUE(exam_id) OVER(ORDER BY exam_id) FROM examination;")
+            psqlcur.execute("SELECT LAST_VALUE(exam_id) OVER(ORDER BY exam_id) FROM examination;") #todo: fix last_vaslue - whole column saved into list
             last_id=psqlcur.fetchone()
             (gender, age, palm, mscd) = exam_data()
             psqlcur.execute("INSERT INTO patient_data (exam_id, gender, age, mcsd, palm_size) VALUES ({0}, '{1}', {2}, '{3}', {4});".format(last_id[0], gender, age, mscd, palm ))
