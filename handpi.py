@@ -184,43 +184,14 @@ while True:
             print('Interrupted!')
 
     else:
-     # with open("/home/handpi/"+time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())+".csv", mode='w') as file:
-     #     writer = csv.writer(file,delimiter=',',quotechar='"',quoting=csv.QUOTE_MINIMAL)
-     #     writer.writerow([ADC_channels, IMU_channels])
-     #     
-     #     try:
-     #         while True:
-     #             sign = input("Select sign to be performed: \t")
-     #             ADC_readings_temp=[]
-     #             position_readings_temp=[]
-     #             movement_readings_temp=[]
-     #             try:
-     #                 if sign in sign_types_dict:
-     #                     sign_type = sign_types_dict[sign]
-     #             except:
-     #                 print('{0} is not in dictionary.'.format(sign))
-     #             for i in trange(loop_time):
-     #                 ADC_readings_temp.append(readADC())
-     #                 position_readings_temp.append(sensor.euler)
-     #                 movement_readings_temp.append(sensor.linear_acceleration)
-     #             signarr = np.array([sign for i in range(loop_time)],dtype='str')
-     #             typearr = np.array([sign_type for i in range(loop_time)],dtype='str')
-     #             
-     #             result = np.concatenate((ADC_readings_temp, position_readings_temp, movement_readings_temp),axis=1)
-     #             result = np.append(result,np.column_stack((signarr, typearr)),axis = 1)
-     #             print(result)
-     #             self_diag(21000)
-     #             np.savetxt(file, result, delimiter=',', fmt= fmt)
-     #             if sign_types_dict[sign] == 'static':
-     #                 cur.exequte(""" INSERT INTO static_gestures () VALUES (); """, (result))
         try:
             
             initals = input ('Please provide subject initials:')
             psqlcur.execute("INSERT INTO examination (patient_initials) VALUES ('{0}');".format(initals))
-            psqlcur.execute("SELECT LAST_VALUE(exam_id) OVER(ORDER BY exam_id) FROM examination;")
+            psqlcur.execute("SELECT MAX(exam_id) FROM examination;")
             last_id=psqlcur.fetchone()
             (gender, age, palm, mscd) = exam_data()
-            psqlcur.execute("INSERT INTO patient_data (exam_id, gender, age, mcsd, palm_size) VALUES ({0}, '{1}', {2}, '{3}', {4});".format(last_id[0], gender, age, mscd, palm ))
+            psqlcur.execute("INSERT INTO patient_data (exam_id, gender, age, mcsd, palm_size) VALUES ({0}, '{1}', {2}, '{3}', {4});".format(max(last_id), gender, age, mscd, palm ))
             
             while True:
                 sign = input("Select sign to be performed: \t")
