@@ -1,5 +1,12 @@
 import board
 import busio
+import paho.mqtt.client as mqtt
+
+mqttc=mqtt.Client(client_id='handpi')
+
+broker= '192.168.0.102'
+port=1883
+topic='handpi'
 
 import paho.mqtt.client as mqtt
 
@@ -15,11 +22,13 @@ import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.ads1x15 import Mode
 from adafruit_ads1x15.analog_in import AnalogIn
 
+
 import adafruit_bno055
 
 from tqdm import trange
 
 import psycopg2 as psql
+
 
 import pandas as pd
 import numpy as np
@@ -167,8 +176,10 @@ while True:
     loop_time = 100
     
     mqttc.connect(broker,port)
+
     psqlconn = psql.connect(dbname = 'handpi', user = 'handpi', password = 'raspberryhandpi', host = broker)
     psqlcur = psqlconn.cursor()
+
     
     mode = input("Select operation mode: \n 1 - Debug Mode \t 2 - Examination Mode")
     
@@ -184,11 +195,15 @@ while True:
             print('Interrupted!')
 
     else:
+
         try:
+
             
             initals = input ('Please provide subject initials:')
             psqlcur.execute("INSERT INTO examination (patient_initials) VALUES ('{0}');".format(initals))
+
             psqlcur.execute("SELECT MAX(exam_id) FROM examination;")
+
             last_id=psqlcur.fetchone()
             (gender, age, palm, mscd) = exam_data()
             psqlcur.execute("INSERT INTO patient_data (exam_id, gender, age, mcsd, palm_size) VALUES ({0}, '{1}', {2}, '{3}', {4});".format(max(last_id), gender, age, mscd, palm ))
