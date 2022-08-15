@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+
+
+
 import board
 import busio
 import paho.mqtt.client as mqtt
@@ -170,8 +174,8 @@ def exam_data():
 
 
 
-
-while True:
+def main():
+    while True:
     #print ("HandPi ver:", version)
     
     self_diag(21000)
@@ -261,5 +265,7 @@ while True:
             psqlconn.close()
             print('Examination stopped')
 
- 
+if __name__ == '__main__':
+    
+    main()
        
