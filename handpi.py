@@ -1,5 +1,5 @@
 
-
+#!/usr/bin/env python3
 
 
 import board
@@ -41,16 +41,20 @@ ads2 = ADS.ADS1115(i2c, address=0x4b, data_rate=860, gain=2/3)  # U2
 ads3 = ADS.ADS1115(i2c, address=0x49, data_rate=860, gain=2/3)  # U3
 ads4= ADS.ADS1115(i2c, address=0x48, data_rate=860, gain=2/3)  # U41
 
-remap_P6= (0x00,0x01,0x02,0x00,0x01,0x01)
 
 sensor = adafruit_bno055.BNO055_I2C(i2c) #IMU
-#BNO_AXIS_REMAP = { 'x': BNO055.AXIS_REMAP_X,
-#                   'y': BNO055.AXIS_REMAP_Z,
-#                   'z': BNO055.AXIS_REMAP_Y,
-#                   'x_sign': BNO055.AXIS_REMAP_POSITIVE,
-#                   'y_sign': BNO055.AXIS_REMAP_POSITIVE,
-#                   'z_sign': BNO055.AXIS_REMAP_NEGATIVE }
 
+#BNO_AXIS_REMAP = { 'x': BNO055.AXIS_REMAP_X,
+#                  'y': BNO055.AXIS_REMAP_Z,
+#                  'z': BNO055.AXIS_REMAP_Y,
+#                  'x_sign': BNO055.AXIS_REMAP_POSITIVE,
+#                  'y_sign': BNO055.AXIS_REMAP_POSITIVE,
+#                  'z_sign': BNO055.AXIS_REMAP_NEGATIVE }
+#remap=(0x00,0x02,0x01,0x00,0x00,0x01)
+remap=(0,2,1,0,0,1)
+sensor.axis_remap = remap
+
+print("Axis mapped as:{}".format(sensor.axis_remap))
 
 P1_1 = AnalogIn(ads3, ADS.P3) # P1_1 PIN:12
 P1_2 = AnalogIn(ads3, ADS.P1) # P1_2 PIN:9
@@ -151,7 +155,7 @@ def self_diag(shortcircuit_threshold):
         diag_vect=np.array(ADC_diag_buff)
 
     result = np.where(diag_vect.mean(axis=0) >= shortcircuit_threshold)
-    print('Shortcircuits on ADC_: ', result[0], sep='\n')
+    print('Shortcircuits on ADC_: ', result[0], sep='\t')
     sc_channels=result[0]
     for x in sc_channels:
         print(ADC_channels[x])
