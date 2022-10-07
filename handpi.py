@@ -172,12 +172,14 @@ def exam_data():
 
 
 
+
+
 def main():
     while True:
     #print ("HandPi ver:", version)
     
         self_diag(21000)
-        loop_time = 100
+        loop_time = 50
         
         mqttc.connect(broker,port)
     
@@ -214,57 +216,70 @@ def main():
                 
                 while True:
                     sign = input("Select sign to be performed: \t")
-                    ADC_readings_temp=[]
-                    position_readings_temp=[]
-                    movement_readings_temp=[]
+                    reps = input("Enter the number of repetitions: \t")
                     try:
-                        if sign in sign_types_dict:
-                            sign_type = sign_types_dict[sign]
+                            if sign in sign_types_dict:
+                                sign_type = sign_types_dict[sign]
                     except:
-                        print('{0} is not in dictionary.'.format(sign)) 
-
-                    if sign_type == 'static':
-                        t=time.process_time()
-                        with alive_bar(loop_time, ctrl_c=False, bar='filling',title='Gesture {}'.format(sign)) as bar:
-                            for i in range(loop_time):
-                                ADC_readings_temp = readADC()
-                                position_readings_temp = sensor.euler
-                                movement_readings_temp = sensor.linear_acceleration
-                                try:
-                                    psqlcur.execute(" INSERT INTO static_gestures (exam_id, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture, tmstmp) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, '{17}', '{18}'); ".format(last_id[0],  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign, pd.Timestamp.now() ))        
-                                    psqlconn.commit() 
-                                except psql.errors.UndefinedColumn :
-                                    psqlconn.rollback()
-                                    if 'None' in position_readings_temp:
-                                        position_readings_temp = (0,0,0)
-                                    else:
-                                        movement_readings_temp = (0,0,0)
-                                    psqlcur.execute(" INSERT INTO static_gestures (exam_id, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture, tmstmp) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, '{17}', '{18}'); ".format(last_id[0],  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign, pd.Timestamp.now() ))        
-                                    psqlconn.commit()
-                                bar()
-                        elapsed_time = time.process_time()-t
-                        print (elapsed_time)
-                        self_diag(21000)
-                        psqlconn.commit()
-
-                    else:
-                        with alive_bar(loop_time, ctrl_c=False, bar='filling',title='Gesture {}'.format(sign)) as bar:
-                            for i in range(loop_time):         # to-do: Add proper time metrics
-                                ADC_readings_temp = readADC()
-                                position_readings_temp = sensor.euler
-                                movement_readings_temp = sensor.linear_acceleration
-                                try:
-                                    psqlcur.execute(" INSERT INTO dynamic_gestures (exam_id, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture, tmstmp) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, '{17}', '{18}'); ".format(last_id[0],  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign, pd.Timestamp.now() ))        
-                                    psqlconn.commit()
-                                except psql.errors.UndefinedColumn :
-                                    psqlconn.rollback()
-                                    position_readings_temp = sensor.euler
-                                    movement_readings_temp = sensor.linear_acceleration
-                                    psqlcur.execute(" INSERT INTO dynamic_gestures (exam_id, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture, tmstmp) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, '{17}', '{18}'); ".format(last_id[0],  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign, pd.Timestamp.now() ))     
-                                    psqlconn.commit()
-                                bar()
-                        self_diag(21000)
-                        psqlconn.commit()
+                        print('{0} is not in dictionary.'.format(sign))
+                        
+                    print('Commencing procedure')
+                    for r in range(reps):
+                       time.sleep(1)
+                       
+                    
+                       ADC_readings_temp=[]
+                       position_readings_temp=[]
+                       movement_readings_temp=[]
+                        
+                       if sign_type == 'static':
+                           t=time.process_time()
+                           with alive_bar(loop_time, ctrl_c=False, bar='filling',title='Gesture {}'.format(sign)) as bar:
+                               for i in range(loop_time):
+                                   ADC_readings_temp = readADC()
+                                   position_readings_temp = sensor.euler
+                                   movement_readings_temp = sensor.linear_acceleration
+                                   try:
+                                       psqlcur.execute(" INSERT INTO static_gestures (exam_id, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture, tmstmp) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, '{17}', '{18}'); ".format(last_id[0],  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign, pd.Timestamp.now() ))        
+                                       psqlconn.commit() 
+                                   except psql.errors.UndefinedColumn :
+                                       psqlconn.rollback()
+                                       if 'None' in position_readings_temp:
+                                           position_readings_temp = (0,0,0)
+                                       else:
+                                           movement_readings_temp = (0,0,0)
+                                       psqlcur.execute(" INSERT INTO static_gestures (exam_id, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture, tmstmp) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, '{17}', '{18}'); ".format(last_id[0],  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign, pd.Timestamp.now() ))        
+                                       psqlconn.commit()
+                                   bar()
+                           elapsed_time = time.process_time()-t
+                           print (elapsed_time)
+                           self_diag(21000)
+                           psqlconn.commit()
+                           
+                       else:
+                           with alive_bar(loop_time, ctrl_c=False, bar='filling',title='Gesture {}'.format(sign)) as bar:
+                               for i in range(loop_time):         # to-do: Add proper time metrics
+                                   ADC_readings_temp = readADC()
+                                   position_readings_temp = sensor.euler
+                                   movement_readings_temp = sensor.linear_acceleration
+                                   try:
+                                       psqlcur.execute(" INSERT INTO dynamic_gestures (exam_id, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture, tmstmp) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, '{17}', '{18}'); ".format(last_id[0],  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign, pd.Timestamp.now() ))        
+                                       psqlconn.commit()
+                                   except psql.errors.UndefinedColumn :
+                                       psqlconn.rollback()
+                                       if 'None' in position_readings_temp:
+                                           position_readings_temp = (0,0,0)
+                                       else:
+                                           movement_readings_temp = (0,0,0)
+                                       psqlcur.execute(" INSERT INTO dynamic_gestures (exam_id, p1_1, p1_2, p2_1, p2_2, p3_1, p3_2, p4_1, p4_2, p5_1, p5_2, gyro_x, gyro_y, gyro_z, acc_x, acc_y, acc_z, gesture, tmstmp) VALUES ({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}, {11}, {12}, {13}, {14}, {15}, {16}, '{17}', '{18}'); ".format(last_id[0],  *ADC_readings_temp, *position_readings_temp,  *movement_readings_temp, sign, pd.Timestamp.now() ))     
+                                       psqlconn.commit()
+                                   bar()
+                           self_diag(21000)
+                           psqlconn.commit()
+                       print('Repeating:')
+                       for i in range(1,3):
+                           print('{0}'.format(i))
+                           time.sleep(1)
                
     
             except KeyboardInterrupt:
