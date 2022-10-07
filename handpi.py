@@ -177,7 +177,7 @@ def main():
     #print ("HandPi ver:", version)
     
         self_diag(21000)
-        loop_time = 100
+        loop_time = 50
         
         mqttc.connect(broker,port)
     
