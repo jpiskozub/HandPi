@@ -51,7 +51,7 @@ sensor = adafruit_bno055.BNO055_I2C(i2c) #IMU
 #                  'y_sign': BNO055.AXIS_REMAP_POSITIVE,
 #                  'z_sign': BNO055.AXIS_REMAP_NEGATIVE }
 #remap=(0x00,0x02,0x01,0x00,0x00,0x01)
-remap=(0,2,1,0,0,1)
+remap=(0,1,2,1,1,0) # Position P2 as in datasheet p.25
 sensor.axis_remap = remap
 
 print("Axis mapped as:{}".format(sensor.axis_remap))
